@@ -287,7 +287,8 @@
 
 (declaim (inline bit-stream-read-bits))
 (defun bit-stream-read-bits (stream bits)
-  (declare (type bit-stream stream) (type (unsigned-byte 8) bits))
+  (declare (type bit-stream stream) (type #-ecl (unsigned-byte 8)
+					  #+ecl (signed-byte 8) bits))
   "Read single or multiple bits from the given bit-stream."
   (loop while (< (bit-stream-bit-count stream) bits)
         do
