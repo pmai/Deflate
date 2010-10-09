@@ -1,6 +1,6 @@
 ;;;; Deflate --- RFC 1951 Deflate Decompression
 ;;;;
-;;;; Copyright (C) 2000-2009 PMSF IT Consulting Pierre R. Mai.
+;;;; Copyright (C) 2000-2010 PMSF IT Consulting Pierre R. Mai.
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person obtaining
 ;;;; a copy of this software and associated documentation files (the
