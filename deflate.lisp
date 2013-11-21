@@ -28,15 +28,15 @@
 ;;;; 
 ;;;; $Id$
 
-(cl:defpackage "DEFLATE"
-  (:use "COMMON-LISP")
+(cl:defpackage #:deflate
+  (:use #:common-lisp)
   (:export #:decompression-error #:deflate-decompression-error
            #:zlib-decompression-error #:gzip-decompression-error
            #:inflate-stream
            #:inflate-zlib-stream #:parse-zlib-header #:parse-zlib-footer
            #:inflate-gzip-stream #:parse-gzip-header #:parse-gzip-footer))
 
-(cl:in-package "DEFLATE")
+(cl:in-package #:deflate)
 
 ;;;; %File Description:
 ;;;; 

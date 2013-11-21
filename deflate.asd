@@ -28,7 +28,7 @@
 ;;;; 
 ;;;; $Id$
 
-(cl:in-package "CL-USER")
+(cl:in-package #:cl-user)
 
 ;;;; %File Description:
 ;;;; 
