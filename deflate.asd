@@ -38,6 +38,9 @@
 ;;;; 
 
 (asdf:defsystem "deflate"
-    :description "Deflate Decompression Library"
-    :author "Pierre R. Mai <pmai@pmsf.de>"
-    :components ((:file "deflate")))
+  :description "Deflate Decompression Library"
+  :author "Pierre R. Mai <pmai@pmsf.de>"
+  :maintainer "Pierre R. Mai <pmai@pmsf.de>"
+  :licence "MIT/X11"
+  :version "1.0.2"
+  :components ((:file "deflate")))
