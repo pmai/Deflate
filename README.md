@@ -1,6 +1,8 @@
-This library is an implementation of Deflate (RFC 1951) decompression,
-with optional support for ZLIB-style (RFC 1950) and gzip-style (RFC
-1952) wrappers of deflate streams.  It currently does not handle
+[![Build Status](https://travis-ci.org/pmai/Deflate.svg?branch=master)](https://travis-ci.org/pmai/Deflate)
+
+This library is an implementation of Deflate ([RFC 1951][]) decompression,
+with optional support for ZLIB-style ([RFC 1950][]) and gzip-style
+([RFC 1952][]) wrappers of deflate streams.  It currently does not handle
 compression, although this is a natural extension.
 
 The implementation should be portable across all ANSI compliant CL
@@ -19,3 +21,7 @@ in the file COPYING and the header of each source file.
 
 Please direct any feedback to pmai@pmsf.de.  A git repository of this
 library is available under http://github.com/pmai/Deflate/tree/master
+
+[RFC 1951]: https://tools.ietf.org/html/rfc1951
+[RFC 1950]: https://tools.ietf.org/html/rfc1950
+[RFC 1952]: https://tools.ietf.org/html/rfc1952
