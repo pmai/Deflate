@@ -11,7 +11,13 @@ env:
     - LISP=ccl32
     - LISP=clisp
     - LISP=clisp32
+    - LISP=cmucl
     - LISP=ecl
+
+matrix:
+  allow_failures:
+    - env: LISP=ccl32
+    - env: LISP=cmucl
 
 install:
   - curl -L https://github.com/luismbo/cl-travis/raw/master/install.sh | sh
