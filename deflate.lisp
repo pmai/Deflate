@@ -1,6 +1,6 @@
 ;;;; Deflate --- RFC 1951 Deflate Decompression
 ;;;;
-;;;; Copyright (C) 2000-2013 PMSF IT Consulting Pierre R. Mai.
+;;;; Copyright (C) 2000-2020 PMSF IT Consulting Pierre R. Mai.
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person obtaining
 ;;;; a copy of this software and associated documentation files (the
@@ -133,7 +133,7 @@
   "CRC-32 Polynomial as per RFC 1952.")
 
 (declaim (ftype #-lispworks (function () (simple-array (unsigned-byte 32) (256)))
-                #+lispworks (function () (sys:simple-int32-vector 256))
+                #+lispworks (function () sys:simple-int32-vector)
                 generate-crc32-table))
 (defun generate-crc32-table ()
   (let ((result #-lispworks (make-array 256 :element-type '(unsigned-byte 32))
@@ -182,7 +182,7 @@
         (cur (sys:int32-lognot (sys:integer-to-int32 
                                 (dpb (ldb (byte 32 0) crc) (byte 32 0) 
                                      (if (logbitp 31 crc) -1 0))))))
-    (declare (type (sys:simple-int32-vector 256) table)
+    (declare (type sys:simple-int32-vector table)
              (type sys:int32 cur))
     (dotimes (i end)
       (declare (type fixnum i))
