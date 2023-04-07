@@ -445,17 +445,29 @@ lengths for further processing."
            (setf (aref result index) code)
            (incf index))
         (16
+           (when (= index 0)
+             (error 'deflate-decompression-error
+                    :format-control "Length entries start with a repetition!"))
            (let ((length (+ 3 (bit-stream-read-bits bit-stream 2))))
+             (unless (<= (+ index length) count)
+               (error 'deflate-decompression-error
+                      :format-control "Length entries expand out of bounds."))
              (dotimes (i length)
                (setf (aref result (+ index i)) (aref result (1- index))))
              (incf index length)))
         (17
            (let ((length (+ 3 (bit-stream-read-bits bit-stream 3))))
+             (unless (<= (+ index length) count)
+               (error 'deflate-decompression-error
+                      :format-control "Length entries expand out of bounds."))
              (dotimes (i length)
                (setf (aref result (+ index i)) 0))
              (incf index length)))
         (18
            (let ((length (+ 11 (bit-stream-read-bits bit-stream 7))))
+             (unless (<= (+ index length) count)
+               (error 'deflate-decompression-error
+                      :format-control "Length entries expand out of bounds."))
              (dotimes (i length)
                (setf (aref result (+ index i)) 0))
              (incf index length)))))))
