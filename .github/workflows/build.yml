@@ -7,11 +7,18 @@ jobs:
   build:
     name: Build ${{ matrix.lisp }} on ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        lisp: [ sbcl-bin, ccl ]
+        lisp: [ sbcl-bin, allegro ]
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Windows specific settings
+        if: matrix.os == 'windows-latest'
+        run: |
+          git config --global core.autocrlf false
+          echo "ROSWELL_INSTALL_DIR=~/ros" >> "$GITHUB_ENV"
+          echo "~/ros/bin" >> $GITHUB_PATH
       - uses: actions/checkout@v3
       - name: cache .roswell
         id: cache-dot-roswell
