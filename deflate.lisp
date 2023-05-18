@@ -210,7 +210,8 @@
 
 (declaim (inline sliding-window-stream-write-byte))
 (defun sliding-window-stream-write-byte (stream byte)
-  (declare (type sliding-window-stream stream) (type (unsigned-byte 8) byte))
+  (declare (type sliding-window-stream stream) (type (unsigned-byte 8) byte)
+           (optimize (speed 3) (debug 0) (space 0) (safety 0)))
   "Write a single byte to the sliding-window-stream."
   (let ((end (sliding-window-stream-buffer-end stream)))
     (declare (type fixnum end))
@@ -230,7 +231,7 @@
                         +sliding-window-size+))))
       (setq end 0))
     (setf (aref (sliding-window-stream-buffer stream) end) byte
-          (sliding-window-stream-buffer-end stream) (1+ end))))
+          (sliding-window-stream-buffer-end stream) (the fixnum (1+ end)))))
 
 (defun sliding-window-stream-flush (stream)
   (declare (type sliding-window-stream stream))
@@ -254,7 +255,8 @@
                       :end end))))
 
 (defun sliding-window-stream-copy-bytes (stream distance length)
-  (declare (type sliding-window-stream stream) (type fixnum distance length))
+  (declare (type sliding-window-stream stream) (type fixnum distance length)
+           (optimize (speed 3) (debug 0) (space 0) (safety 0)))
   "Copy a number of bytes from the current sliding window."
   (let* ((end (sliding-window-stream-buffer-end stream))
          (start (mod (- end distance) +sliding-window-size+))
@@ -264,7 +266,7 @@
     (dotimes (i length)
       (sliding-window-stream-write-byte
        stream
-       (aref buffer (mod (+ start i) +sliding-window-size+))))))
+       (aref buffer (mod (the fixnum (+ start i)) +sliding-window-size+))))))
 
 ;;;
 ;;; Helper Data Structures: Bit-wise Input Stream
@@ -307,7 +309,7 @@
 (declaim (inline bit-stream-copy-block))
 (defun bit-stream-copy-block (stream out-stream)
   (declare (type bit-stream stream) (type sliding-window-stream out-stream)
-           (optimize (speed 3) (safety 0) (space 0) (debug 0)))
+           (optimize (speed 3) (debug 0) (space 0) (safety 0)))
   "Copy a given block of bytes directly from the underlying stream."
   ;; Skip any remaining unprocessed bits
   (setf (bit-stream-bits stream) 0
@@ -383,7 +385,7 @@ the code lengths of each symbol given in the input array."
 (declaim (inline read-huffman-code))
 (defun read-huffman-code (bit-stream decode-tree)
   (declare (type bit-stream bit-stream) (type decode-tree decode-tree)
-           (optimize (speed 3) (safety 0) (space 0) (debug 0)))
+           (optimize (speed 3) (debug 0) (space 0) (safety 0)))
   "Read the next huffman code word from the given bit-stream and
 return its decoded symbol, for the huffman code given by decode-tree."
   (loop with length-count of-type (simple-array fixnum (*)) 
@@ -522,6 +524,7 @@ the corresponding decode-trees for literals/length and distance codes."
     ((<= symbol 3) (1+ symbol))
     (t
      (multiple-value-bind (order offset) (truncate symbol 2)
+       (declare (type (unsigned-byte 4) order offset))
        (let* ((extra-bits (1- order))
               (factor (ash 1 extra-bits)))
          (+ (1+ (ash 1 order))
@@ -532,6 +535,9 @@ the corresponding decode-trees for literals/length and distance codes."
                              lit-decode-tree dist-decode-tree)
   "Decode the huffman code block using the huffman codes given by 
 lit-decode-tree and dist-decode-tree."
+  (declare (type bit-stream bit-stream) (type sliding-window-stream window-stream)
+           (type decode-tree lit-decode-tree dist-decode-tree)
+           (optimize (speed 3) (debug 0) (space 0) (safety 0)))
   (do ((symbol (read-huffman-code bit-stream lit-decode-tree)
                (read-huffman-code bit-stream lit-decode-tree)))
       ((= symbol 256))
