@@ -1,0 +1,47 @@
+on:
+  push:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build ${{ matrix.lisp }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        lisp: [ sbcl-bin, allegro ]
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Windows specific settings
+        if: matrix.os == 'windows-latest'
+        run: |
+          git config --global core.autocrlf false
+          echo "ROSWELL_INSTALL_DIR=~/ros" >> "$GITHUB_ENV"
+          echo "~/ros/bin" >> $GITHUB_PATH
+      - uses: actions/checkout@v3
+      - name: cache .roswell
+        id: cache-dot-roswell
+        uses: actions/cache@v3
+        with:
+          path: ~/.roswell
+          key: ${{ runner.os }}-dot-roswell-${{ matrix.lisp }}-${{ hashFiles('**/*.asd') }}
+          restore-keys: |
+            ${{ runner.os }}-dot-roswell-${{ matrix.lisp }}-
+            ${{ runner.os }}-dot-roswell-
+      - name: install roswell
+        shell: bash
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+      - name: run lisp
+        continue-on-error: true
+        shell: bash
+        run: |
+          ros -e '(format t "~a:~a on ~a~%...~%~%" (lisp-implementation-type) (lisp-implementation-version) (machine-type))'
+          ros -e '(format t " fixnum bits:~a~%" (integer-length most-positive-fixnum))'
+          ros -e "(ql:quickload 'trivial-features)" -e '(format t "features = ~s~%" *features*)'
+      - name: build deflate
+        shell: bash
+        run: |
+          ros -e '(ql:quickload "deflate")'
