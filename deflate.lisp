@@ -797,12 +797,12 @@ match."
              :format-control "CRC-16 Checksum mismatch in header: ~4,'0X != ~4,'0X!"
              :format-arguments (list crc16-old crc16-new)))
     (let ((checksum-new (inflate-stream input-stream output-stream 
-                                        :checksum (when check-checksum :crc-32)))
-          (checksum-old (parse-gzip-footer input-stream)))
-      ;; Handle Checksums
-      (when (and check-checksum (not (= checksum-old checksum-new)))
-        (error 'gzip-decompression-error
-               :format-control
-               "Checksum mismatch for decompressed stream: ~8,'0X != ~8,'0X!"
-               :format-arguments (list checksum-old checksum-new)))
-      (values checksum-old fname mtime fcomment crc16-old crc16-new))))
+                                        :checksum (when check-checksum :crc-32))))
+      (multiple-value-bind (checksum-old isize) (parse-gzip-footer input-stream)
+        ;; Handle Checksums
+        (when (and check-checksum (not (= checksum-old checksum-new)))
+          (error 'gzip-decompression-error
+                 :format-control
+                 "Checksum mismatch for decompressed stream: ~8,'0X != ~8,'0X!"
+                 :format-arguments (list checksum-old checksum-new)))
+        (values checksum-old fname mtime fcomment isize crc16-old crc16-new)))))
