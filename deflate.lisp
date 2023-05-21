@@ -630,78 +630,91 @@ return values (or nil if any given field is not present).  Checks the
 header for magic values and correct flags settings and signals a
 gzip-decompression-error in case of incorrect or unsupported magic
 values or flags."
-  (let ((id1 (read-byte input-stream))
-        (id2 (read-byte input-stream))
-        (compression-method (read-byte input-stream))
-        (flags (read-byte input-stream)))
-    (unless (and (= id1 +gzip-header-id1+) (= id2 +gzip-header-id2+))
-      (error 'gzip-decompression-error
-             :format-control
-             "Header missing magic values ~2,'0X,~2,'0X (got ~2,'0X,~2,'0X instead)!"
-             :format-arguments (list +gzip-header-id1+ +gzip-header-id2+ id1 id2)))
-    (unless (= compression-method 8)
-      (error 'gzip-decompression-error
-             :format-control "Unknown compression-method in Header ~2,'0X!"
-             :format-arguments (list compression-method)))
-    (unless (zerop (ldb (byte 3 5) flags))
-      (error 'gzip-decompression-error
-             :format-control "Unknown flags in Header ~2,'0X!"
-             :format-arguments (list flags)))
-    (values compression-method
-            ;; FTEXT
-            (= 1 (ldb (byte 1 0) flags))
-            ;; MTIME
-            (parse-gzip-mtime input-stream)
-            ;; XFLAGS
-            (read-byte input-stream)
-            ;; OS
-            (read-byte input-stream)
-            ;; FEXTRA
-            (unless (zerop (ldb (byte 1 2) flags))
-              (parse-gzip-extra input-stream))
-            ;; FNAME
-            (unless (zerop (ldb (byte 1 3) flags))
-              (parse-gzip-string input-stream))
-            ;; FCOMMENT
-            (unless (zerop (ldb (byte 1 4) flags))
-              (parse-gzip-string input-stream))
-            ;; CRC16
-            (unless (zerop (ldb (byte 1 1) flags))
-              (+ (read-byte input-stream)
-                 (* (read-byte input-stream 256)))))))
-
-(defun parse-gzip-mtime (input-stream)
-  (let ((time (+ (read-byte input-stream)
-                 (* (read-byte input-stream) 256)
-                 (* (read-byte input-stream) 256 256)
-                 (* (read-byte input-stream) 256 256 256))))
-    (if (zerop time)
-        nil
-        (+ time 2208988800))))
-
-(defun parse-gzip-extra (input-stream)
-  (let* ((length (+ (read-byte input-stream) (* (read-byte input-stream) 256)))
-         (result (make-array length :element-type '(unsigned-byte 8))))
-    (read-sequence result input-stream)
-    result))
-
-(defun parse-gzip-string (input-stream)
-  (with-output-to-string (string)
-    (loop for value = (read-byte input-stream)
-          until (zerop value)
-          do (write-char (code-char value) string))))
-          
-(defun parse-gzip-checksum (input-stream)
-  (+ (read-byte input-stream)
-     (* (read-byte input-stream) 256)
-     (* (read-byte input-stream) 256 256)
-     (* (read-byte input-stream) 256 256 256)))
+  (let ((crc32 +crc-32-start-value+))
+    (labels ((crc-read-buffer (len)
+               (let ((buffer (make-array len :element-type '(unsigned-byte 8))))
+                 (unless (= (read-sequence buffer input-stream) len)
+                   (error 'gzip-decompression-error
+                          :format-control "Unexpected End Of File during GZIP Header parsing!"
+                          :format-arguments nil))
+                 (setq crc32 (update-crc32-checksum crc32 buffer len))
+                 buffer))
+             (crc-read-byte ()
+               (let ((buffer (crc-read-buffer 1)))
+                 (aref buffer 0)))
+             (crc-read-word ()
+               (let ((buffer (crc-read-buffer 2)))
+                 (+ (aref buffer 0)
+                    (* (aref buffer 1) 256))))
+             (crc-read-dword ()
+               (let ((buffer (crc-read-buffer 4)))
+                 (+ (aref buffer 0)
+                    (* (aref buffer 1) 256)
+                    (* (aref buffer 2) 256 256)
+                    (* (aref buffer 3) 256 256 256))))
+             (crc-read-string ()
+               (with-output-to-string (string)
+                 (loop with buffer = (make-array 1 :element-type '(unsigned-byte 8))
+                       for value = (read-byte input-stream)
+                       do
+                         (setf (aref buffer 0) value)
+                         (setq crc32 (update-crc32-checksum crc32 buffer 1))
+                         (if (zerop value)
+                               (return t)
+                           (write-char (code-char value) string))))))
+      (let ((id1 (crc-read-byte))
+            (id2 (crc-read-byte))
+            (compression-method (crc-read-byte))
+            (flags (crc-read-byte)))
+        (unless (and (= id1 +gzip-header-id1+) (= id2 +gzip-header-id2+))
+          (error 'gzip-decompression-error
+                 :format-control
+                 "Header missing magic values ~2,'0X,~2,'0X (got ~2,'0X,~2,'0X instead)!"
+                 :format-arguments (list +gzip-header-id1+ +gzip-header-id2+ id1 id2)))
+        (unless (= compression-method 8)
+          (error 'gzip-decompression-error
+                 :format-control "Unknown compression-method in Header ~2,'0X!"
+                 :format-arguments (list compression-method)))
+        (unless (zerop (ldb (byte 3 5) flags))
+          (error 'gzip-decompression-error
+                 :format-control "Unknown flags in Header ~2,'0X!"
+                 :format-arguments (list flags)))
+        (values compression-method
+                ;; FTEXT
+                (= 1 (ldb (byte 1 0) flags))
+                ;; MTIME
+                (let ((time (crc-read-dword)))
+                  (unless (zerop time)
+                    (+ time 2208988800)))
+                ;; XFLAGS
+                (crc-read-byte)
+                ;; OS
+                (crc-read-byte)
+                ;; FEXTRA
+                (unless (zerop (ldb (byte 1 2) flags))
+                  (crc-read-buffer (crc-read-word)))
+                ;; FNAME
+                (unless (zerop (ldb (byte 1 3) flags))
+                  (crc-read-string))
+                ;; FCOMMENT
+                (unless (zerop (ldb (byte 1 4) flags))
+                  (crc-read-string))
+                ;; CRC16
+                (unless (zerop (ldb (byte 1 1) flags))
+                  (+ (read-byte input-stream)
+                     (* (read-byte input-stream) 256)))
+                ;; Calculated CRC16
+                (ldb (byte 16 0) crc32))))))
 
 (defun parse-gzip-footer (input-stream)
   "Parse the GZIP-style footer as per RFC 1952 from the input-stream and
 return the CRC-32 checksum and ISIZE fields contained in the footer as
 its return values."
-  (values (parse-gzip-checksum input-stream)
+  (values ;; CRC-32
+          (+ (read-byte input-stream)
+             (* (read-byte input-stream) 256)
+             (* (read-byte input-stream) 256 256)
+             (* (read-byte input-stream) 256 256 256))
           ;; ISIZE
           (+ (read-byte input-stream)
              (* (read-byte input-stream) 256)
@@ -777,13 +790,17 @@ expanded data matches the CRC-32 checksum, unless the check-checksum
 keyword argument is set to true, in which case the checksum is checked
 internally and a gzip-decompression-error is signalled if they don't
 match."
-  (multiple-value-bind (cm ftext mtime xfl os fextra fname fcomment)
+  (multiple-value-bind (cm ftext mtime xfl os fextra fname fcomment crc16-old crc16-new)
       (parse-gzip-header input-stream)
     (declare (ignore ftext xfl os fextra))
     (unless (= cm 8)
       (error 'gzip-decompression-error
              :format-control "Unknown compression method ~D!"
              :format-arguments (list cm)))
+    (when (and check-checksum crc16-old (/= crc16-old crc16-new))
+      (error 'gzip-decompression-error
+             :format-control "CRC-16 Checksum mismatch in header: ~4,'0X != ~4,'0X!"
+             :format-arguments (list crc16-old crc16-new)))
     (let ((checksum-new (inflate-stream input-stream output-stream 
                                         :checksum (when check-checksum :crc-32)))
           (checksum-old (parse-gzip-footer input-stream)))
@@ -793,4 +810,4 @@ match."
                :format-control
                "Checksum mismatch for decompressed stream: ~8,'0X != ~8,'0X!"
                :format-arguments (list checksum-old checksum-new)))
-      (values checksum-old fname mtime fcomment))))
+      (values checksum-old fname mtime fcomment crc16-old crc16-new))))
