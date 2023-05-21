@@ -9,6 +9,7 @@ Release 1.0.4
    CRC16 header checksum when checksum checking is enabled.
  * Improve optimize declarations, especially for LispWorks performance.
  * Remove no longer needed muffle annotations for SBCL.
+ * Remove non-endorsement clause from license, making it pure MIT.
 
 Release 1.0.3
 =============
