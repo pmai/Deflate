@@ -522,6 +522,10 @@ the corresponding decode-trees for literals/length and distance codes."
   "Decode the given distance symbol into a proper distance specification."
   (cond
     ((<= symbol 3) (1+ symbol))
+    ((<= 30 symbol 31)
+     (error 'deflate-decompression-error
+            :format-control "Strange Distance Code in bitstream: ~D"
+            :format-arguments (list symbol)))
     (t
      (multiple-value-bind (order offset) (truncate symbol 2)
        (declare (type (unsigned-byte 4) order offset))
