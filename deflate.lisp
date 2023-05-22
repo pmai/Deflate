@@ -197,7 +197,7 @@
 
 (defstruct sliding-window-stream
   (stream nil :type stream :read-only t)
-  (buffer (make-array +sliding-window-size+ :element-type '(unsigned-byte 8)) 
+  (buffer (make-array +sliding-window-size+ :element-type '(unsigned-byte 8) :initial-element 0)
    :type (simple-array (unsigned-byte 8) (#.+sliding-window-size+)) :read-only t)
   (buffer-end 0 :type fixnum)
   (checksum nil :type symbol :read-only t)
