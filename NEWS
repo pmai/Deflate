@@ -5,11 +5,14 @@ Release 1.0.4
    distance entries, based on a PR from @se-mz.
  * Detect invalid distance codes 30/31, for symmetrical treatment of
    invalid length and distance codes.
+ * Initialize sliding window buffer to all 0 to avoid data leakage for
+   backreferences outside of the already written stream.
  * Revamp gzip header decoding to allow for checking of optional FHCRC
    CRC16 header checksum when checksum checking is enabled.
  * Improve optimize declarations, especially for LispWorks performance.
  * Remove no longer needed muffle annotations for SBCL.
  * Remove non-endorsement clause from license, making it pure MIT.
+ * Add testsuite to distribution
 
 Release 1.0.3
 =============
