@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/pmai/Deflate.svg?branch=master)](https://travis-ci.org/pmai/Deflate)
+[![.github/workflows/build.yml](https://github.com/pmai/Deflate/actions/workflows/build.yml/badge.svg)](https://github.com/pmai/Deflate/actions/workflows/build.yml)
 
 This library is an implementation of Deflate ([RFC 1951][]) decompression,
 with optional support for ZLIB-style ([RFC 1950][]) and gzip-style
