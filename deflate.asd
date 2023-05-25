@@ -23,8 +23,6 @@
 ;;;;
 ;;;; $Id$
 
-(cl:in-package #:cl-user)
-
 ;;;; %File Description:
 ;;;; 
 ;;;; This file contains the system definition form for the
@@ -32,10 +30,16 @@
 ;;;; ASDF system definition facility.
 ;;;; 
 
-(asdf:defsystem "deflate"
+(defsystem "deflate"
   :description "Deflate Decompression Library"
   :author "Pierre R. Mai <pmai@pmsf.de>"
   :maintainer "Pierre R. Mai <pmai@pmsf.de>"
   :licence "MIT"
   :version "1.0.4"
-  :components ((:file "deflate")))
+  :components ((:file "deflate"))
+  :in-order-to ((test-op (test-op "deflate/test"))))
+
+(defsystem "deflate/test"
+  :depends-on ("deflate")
+  :components ((:file "deflate-test"))
+  :perform (test-op (o c) (symbol-call '#:deflate-test '#:perform-all-tests)))

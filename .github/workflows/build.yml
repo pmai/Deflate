@@ -45,3 +45,7 @@ jobs:
         shell: bash
         run: |
           ros -e '(ql:quickload "deflate")'
+      - name: test deflate
+        shell: bash
+        run: |
+          ros -e '(ql:quickload "deflate/test")' -e '(if (deflate-test:perform-all-tests) (uiop:quit 0) (uiop:quit 1))'
