@@ -68,7 +68,7 @@
 ;;;
 
 (defclass octet-input-stream (fundamental-binary-input-stream)
-  ((data :initarg :data :type (simple-array (*) (unsigned-byte 8)))
+  ((data :initarg :data :type (simple-array (unsigned-byte 8) (*)))
    (position :initform 0)))
 
 (defmethod stream-element-type ((stream octet-input-stream))
