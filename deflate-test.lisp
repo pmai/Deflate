@@ -37,6 +37,8 @@
    #-(or sbcl allegro cmu clisp openmcl lispworks ecl clasp abcl mocl genera mezzano) ...
    #:fundamental-binary-input-stream #:fundamental-binary-output-stream
    #:stream-read-byte #:stream-write-byte)
+  #+ecl
+  (:shadowing-import-from :gray #:stream-element-type)
   (:export
    #:perform-all-tests
    #:perform-deflate-tests
