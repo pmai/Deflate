@@ -40,6 +40,6 @@
   :in-order-to ((test-op (test-op "deflate/test"))))
 
 (defsystem "deflate/test"
-  :depends-on ("deflate")
+  :depends-on ("deflate" #+abcl (:require :gray-streams))
   :components ((:file "deflate-test"))
   :perform (test-op (o c) (symbol-call '#:deflate-test '#:perform-all-tests)))
